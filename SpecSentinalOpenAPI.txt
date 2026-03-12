@@ -1,0 +1,438 @@
+openapi: 3.0.3
+info:
+  title: SpecSentinel API
+  description: |
+    Agentic AI API Health, Compliance & Governance Bot
+    
+    SpecSentinel analyzes OpenAPI specifications to identify security vulnerabilities,
+    compliance issues, and governance violations using vector-based rule matching
+    and AI-powered signal extraction.
+    
+    ## Features
+    - Upload OpenAPI specs (YAML or JSON)
+    - Receive detailed health reports with findings
+    - Vector DB-backed rule matching (OWASP, OpenAPI, Governance)
+    - Automatic rule ingestion and updates
+    - Health scoring and compliance assessment
+  version: 1.0.0
+  contact:
+    name: SpecSentinel Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://172.28.224.1:8000
+    description: Local development server
+  - url: http://172.28.224.1:8000
+    description: Production server
+
+tags:
+  - name: Analysis
+    description: OpenAPI specification analysis endpoints
+  - name: System
+    description: System health and statistics endpoints
+  - name: Management
+    description: Rule management and refresh endpoints
+
+paths:
+  /:
+    get:
+      summary: Get API information
+      description: Returns basic information about the SpecSentinel service including available endpoints
+      tags:
+        - System
+      operationId: getRoot
+      responses:
+        '200':
+          description: Service information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: SpecSentinel
+                  version:
+                    type: string
+                    example: 1.0.0
+                  status:
+                    type: string
+                    example: running
+                  endpoints:
+                    type: object
+                    properties:
+                      analyze:
+                        type: string
+                        example: POST /analyze  (upload YAML/JSON spec)
+                      analyze_text:
+                        type: string
+                        example: POST /analyze/text  (send spec as JSON body)
+                      stats:
+                        type: string
+                        example: GET  /stats
+                      health:
+                        type: string
+                        example: GET  /health
+                      refresh:
+                        type: string
+                        example: POST /refresh  (trigger rule ingestion)
+
+  /health:
+    get:
+      summary: Health check
+      description: Check the health status of the service and vector database
+      tags:
+        - System
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  rule_counts:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                    example:
+                      owasp_rules: 150
+                      openapi_rules: 75
+                      governance_rules: 50
+
+  /stats:
+    get:
+      summary: Get statistics
+      description: Returns current vector database rule counts per category
+      tags:
+        - System
+      operationId: getStats
+      responses:
+        '200':
+          description: Statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+                example:
+                  owasp_rules: 150
+                  openapi_rules: 75
+                  governance_rules: 50
+        '503':
+          description: Store not initialized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /analyze:
+    post:
+      summary: Analyze OpenAPI specification file
+      description: |
+        Upload an OpenAPI specification file (YAML or JSON) and receive a comprehensive
+        health report including security findings, compliance issues, and governance violations.
+      tags:
+        - Analysis
+      operationId: analyzeSpec
+      parameters:
+        - name: format
+          in: query
+          description: Response format (json or text)
+          required: false
+          schema:
+            type: string
+            enum: [json, text]
+            default: json
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: OpenAPI specification file (YAML or JSON)
+              required:
+                - file
+      responses:
+        '200':
+          description: Analysis completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthReport'
+            text/plain:
+              schema:
+                type: string
+                description: Plain text formatted health report
+        '400':
+          description: Invalid specification file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Vector store not initialized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /analyze/text:
+    post:
+      summary: Analyze OpenAPI specification from JSON body
+      description: |
+        Send an OpenAPI specification as a JSON body and receive a comprehensive
+        health report. The spec can be provided as a parsed object or as a string.
+      tags:
+        - Analysis
+      operationId: analyzeSpecText
+      parameters:
+        - name: format
+          in: query
+          description: Response format (json or text)
+          required: false
+          schema:
+            type: string
+            enum: [json, text]
+            default: json
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                spec:
+                  oneOf:
+                    - type: object
+                      description: Parsed OpenAPI specification object
+                    - type: string
+                      description: OpenAPI specification as YAML/JSON string
+                name:
+                  type: string
+                  description: Name identifier for the specification
+                  default: inline_spec
+              required:
+                - spec
+              example:
+                spec:
+                  openapi: 3.0.0
+                  info:
+                    title: Sample API
+                    version: 1.0.0
+                  paths:
+                    /users:
+                      get:
+                        summary: Get users
+                        responses:
+                          '200':
+                            description: Success
+                name: sample-api
+      responses:
+        '200':
+          description: Analysis completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthReport'
+            text/plain:
+              schema:
+                type: string
+                description: Plain text formatted health report
+        '400':
+          description: Invalid request body or specification
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Vector store not initialized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /refresh:
+    post:
+      summary: Trigger rule refresh
+      description: |
+        Manually trigger a rule ingestion refresh from external sources.
+        The ingestion runs in the background and updates the vector database
+        with the latest rules from OWASP, OpenAPI, and governance sources.
+      tags:
+        - Management
+      operationId: triggerRefresh
+      responses:
+        '200':
+          description: Ingestion started successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ingestion_started
+                  message:
+                    type: string
+                    example: Rule refresh running in background
+        '503':
+          description: Store not initialized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Error message
+          example: "Could not parse spec: Invalid YAML/JSON"
+
+    HealthReport:
+      type: object
+      description: Comprehensive API health report with findings and scores
+      properties:
+        spec_name:
+          type: string
+          description: Name of the analyzed specification
+          example: petstore-api
+        timestamp:
+          type: string
+          format: date-time
+          description: Analysis timestamp
+          example: '2026-03-11T12:30:00Z'
+        health:
+          $ref: '#/components/schemas/HealthScore'
+        findings:
+          type: array
+          description: List of security, compliance, and governance findings
+          items:
+            $ref: '#/components/schemas/Finding'
+        summary:
+          type: object
+          description: Summary statistics
+          properties:
+            total_findings:
+              type: integer
+              example: 15
+            critical:
+              type: integer
+              example: 2
+            high:
+              type: integer
+              example: 5
+            medium:
+              type: integer
+              example: 6
+            low:
+              type: integer
+              example: 2
+
+    HealthScore:
+      type: object
+      description: Overall health score and rating
+      properties:
+        total:
+          type: integer
+          description: Total health score (0-100)
+          minimum: 0
+          maximum: 100
+          example: 72
+        band:
+          type: string
+          description: Health rating band
+          enum: [Excellent, Good, Fair, Poor, Critical]
+          example: Good
+        breakdown:
+          type: object
+          description: Score breakdown by category
+          properties:
+            security:
+              type: integer
+              example: 75
+            compliance:
+              type: integer
+              example: 80
+            governance:
+              type: integer
+              example: 65
+
+    Finding:
+      type: object
+      description: Individual security, compliance, or governance finding
+      properties:
+        id:
+          type: string
+          description: Unique finding identifier
+          example: SEC-001
+        category:
+          type: string
+          description: Finding category
+          enum: [security, compliance, governance, openapi]
+          example: security
+        severity:
+          type: string
+          description: Severity level
+          enum: [critical, high, medium, low, info]
+          example: high
+        title:
+          type: string
+          description: Short title of the finding
+          example: Missing authentication on sensitive endpoint
+        description:
+          type: string
+          description: Detailed description of the issue
+          example: The /users endpoint does not require authentication, exposing sensitive user data
+        location:
+          type: object
+          description: Location in the specification where the issue was found
+          properties:
+            path:
+              type: string
+              example: /users
+            method:
+              type: string
+              example: GET
+            component:
+              type: string
+              example: paths
+        recommendation:
+          type: string
+          description: Recommended remediation action
+          example: Add security requirement with OAuth2 or API key authentication
+        rule_id:
+          type: string
+          description: ID of the matched rule
+          example: OWASP-API1-2023
+        confidence:
+          type: number
+          format: float
+          description: Confidence score of the match (0-1)
+          minimum: 0
+          maximum: 1
+          example: 0.92
+        references:
+          type: array
+          description: External references and documentation
+          items:
+            type: string
+            format: uri
+          example:
+            - https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/
+
+# Made with Bob

@@ -1,0 +1,24 @@
+# SpecSentinel — Python dependencies
+# Install with: pip install -r requirements.txt
+
+# Vector database
+chromadb>=0.5.0
+
+# Web scraping for rule ingestion
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=5.0.0
+
+# YAML parsing for OpenAPI specs
+pyyaml>=6.0
+
+# API framework
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9    # for file uploads
+
+# Scheduling
+APScheduler>=3.10.0
+
+# Utilities
+python-dateutil>=2.9.0

@@ -1,0 +1,84 @@
+openapi: "3.0.3"
+info:
+  title: Sample E-Commerce API
+  description: A deliberately incomplete API spec for SpecSentinel testing
+  version: "1.0"
+
+paths:
+  /getProducts:
+    get:
+      summary: List all products
+      responses:
+        "200":
+          description: Product list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    productName:
+                      type: string
+                    price:
+                      type: number
+                    secretInternalCost:
+                      type: number
+
+  /users/{userId}:
+    get:
+      operationId: getUserById
+      tags: [Users]
+      summary: Get user by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  email:
+                    type: string
+                  password:
+                    type: string
+        "404":
+          description: Not found
+
+  /createOrder:
+    post:
+      summary: Create a new order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                items:
+                  type: array
+                  items:
+                    type: object
+      responses:
+        "201":
+          description: Order created
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer

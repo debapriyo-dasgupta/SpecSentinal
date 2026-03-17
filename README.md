@@ -47,13 +47,15 @@ SpecSentinel_IBM_Hackathon/
 │       └── app.py               # FastAPI application
 │
 ├── frontend/                     # Web Frontend
-│   ├── index.html               # Main HTML page
-│   ├── css/
-│   │   └── styles.css           # Styles and animations
-│   ├── js/
-│   │   └── app.js               # Frontend logic & API integration
-│   ├── README.md                # Frontend documentation
-│   └── QUICKSTART.md            # Quick start guide
+│   ├── app.py                   # Flask application
+│   ├── templates/
+│   │   └── index.html           # Main HTML page
+│   ├── static/
+│   │   ├── css/
+│   │   │   └── styles.css       # Styles and animations
+│   │   └── js/
+│   │       └── app.js           # Frontend logic & API integration
+│   └── README.md                # Frontend documentation
 │
 ├── data/                         # Data files
 │   └── rules/                   # Seed rule files
@@ -66,12 +68,7 @@ SpecSentinel_IBM_Hackathon/
 │   └── sample_bad_spec.yaml     # Test OpenAPI spec
 │
 ├── docs/                         # Documentation
-│   ├── README.md                # Detailed project docs
-│   ├── SETUP.md                 # Setup instructions
-│   └── PROJECT_SUMMARY.md       # Technical summary
-│
-├── config/                       # Configuration
-│   └── setup.ps1                # Automated setup script
+│   └── SETUP.md                 # Setup instructions
 │
 ├── requirements.txt              # Python dependencies
 ├── .gitignore                   # Git ignore rules
@@ -200,8 +197,7 @@ python run_app.py
 
 **Note**: AI Agent is optional. SpecSentinel works perfectly without it, but AI provides enhanced insights.
 
-📚 **Full Documentation**: [AI Agent Guide](docs/AI_AGENT_GUIDE.md)
-
+---
 
 ### Running the Application
 
@@ -258,8 +254,8 @@ http://localhost:8080
 ### Documentation
 
 - [Frontend README](frontend/README.md) - Complete documentation
-- [Quick Start Guide](frontend/QUICKSTART.md) - Get started in 5 minutes
 
+```bash
 cd src/api
 python app.py
 ```
@@ -381,9 +377,8 @@ Severity Deductions:
 ## 📚 Documentation
 
 For detailed documentation, see:
-- [docs/README.md](docs/README.md) - Comprehensive project documentation
 - [docs/SETUP.md](docs/SETUP.md) - Detailed setup instructions
-- [docs/PROJECT_SUMMARY.md](docs/PROJECT_SUMMARY.md) - Technical architecture
+- [frontend/README.md](frontend/README.md) - Frontend documentation
 
 ---
 

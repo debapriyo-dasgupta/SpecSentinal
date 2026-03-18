@@ -90,7 +90,7 @@ SpecSentinel_IBM_Hackathon/
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd SpecSentinel_IBM_Hackathon
+   cd SpecSentinel
    ```
 
 2. **Create and activate virtual environment**
@@ -142,7 +142,7 @@ cd frontend
 python app.py
 ```
 
-\---
+---
 
 ## 🤖 AI-Powered Analysis (NEW!)
 
